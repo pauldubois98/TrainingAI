@@ -166,8 +166,8 @@
             inputCountEl.value = numHidden;
 
             // Initialize weights and biases with defaults
-            weightsIn = [new Array(numHidden).fill(1.0), new Array(numHidden).fill(1.0)];
-            weightsOut = new Array(numHidden).fill(1.0);
+            weightsIn = [new Array(numHidden).fill(0.0), new Array(numHidden).fill(0.0)];
+            weightsOut = new Array(numHidden).fill(0.0);
             biasesHidden = new Array(numHidden).fill(0.0);
             biasOut = 0.0;
 
@@ -212,7 +212,7 @@
             // Generate Input to Hidden Sliders
             for (let i = 0; i < 2; i++) {
                 for (let j = 0; j < numHidden; j++) {
-                    inSlidersContainer.appendChild(createSliderMarkup(`w_in_${i}_${j}`, `W(In${i}→H${j})`, 1.0, (val) => {
+                    inSlidersContainer.appendChild(createSliderMarkup(`w_in_${i}_${j}`, `W(In${i}→H${j})`, 0.0, (val) => {
                         weightsIn[i][j] = val;
                     }));
                 }
@@ -227,7 +227,7 @@
 
             // Generate Hidden to Output Sliders
             for (let j = 0; j < numHidden; j++) {
-                outSlidersContainer.appendChild(createSliderMarkup(`w_out_${j}`, `W(H${j}→Out)`, 1.0, (val) => {
+                outSlidersContainer.appendChild(createSliderMarkup(`w_out_${j}`, `W(H${j}→Out)`, 0.0, (val) => {
                     weightsOut[j] = val;
                 }));
             }
@@ -249,8 +249,8 @@
             const slider = document.createElement('input');
             slider.type = 'range';
             slider.id = id;
-            slider.min = '-2';
-            slider.max = '2';
+            slider.min = '-1';
+            slider.max = '1';
             slider.step = '0.1';
             slider.value = defaultVal;
 
@@ -276,7 +276,7 @@
             const containerRect = svg.parentElement.getBoundingClientRect();
 
             function drawLine(fromEl, toEl, weight) {
-                if (!fromEl || !toEl) return;
+                if (!fromEl || !toEl || weight === 0) return;
                 const a = fromEl.getBoundingClientRect();
                 const b = toEl.getBoundingClientRect();
                 const x1 = a.left + a.width / 2 - containerRect.left;
