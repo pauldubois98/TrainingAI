@@ -12,6 +12,16 @@
 
     <div class="control-group">
         <span class="layer-size-control">
+            <label for="activation_fn">Activation:</label>
+            <select id="activation_fn" onchange="onActivationFnChange()">
+                <option value="step">Step</option>
+                <option value="relu">ReLU</option>
+                <option value="sigmoid">Sigmoid</option>
+                <option value="tanh">Tanh</option>
+                <option value="linear">Linear</option>
+            </select>
+        </span>
+        <span class="layer-size-control">
             <label for="input_value_set">Input values:</label>
             <select id="input_value_set" onchange="onInputSetChange()">
                 <option value="binary">Binary {0, 1}</option>

@@ -1,6 +1,14 @@
 // State
 let inputValueSet = [0, 1];
 let inputs = [0, 0];
+let activationFn = 'step';
+const activationFunctions = {
+    step:    x => x > 0 ? 1 : 0,
+    relu:    x => Math.max(0, x),
+    sigmoid: x => 1 / (1 + Math.exp(-x)),
+    tanh:    x => Math.tanh(x),
+    linear:  x => x,
+};
 let numHiddenLayers = 1;
 let hiddenLayerSizes = [3]; // one entry per hidden layer
 
@@ -98,10 +106,29 @@ function onCustomInputChange() {
     updateNetwork();
 }
 
-function setInputNeuronClass(el, val) {
+function onActivationFnChange() {
+    activationFn = document.getElementById('activation_fn').value;
+    updateNetwork();
+}
+
+function formatVal(v) {
+    return parseFloat(v.toFixed(2)).toString();
+}
+
+const GREY  = [221, 221, 221];
+const GREEN = [76, 175, 80];
+const RED   = [229, 57, 53];
+
+function setNeuronActivation(el, val) {
+    el.textContent = formatVal(val);
+    const t = Math.min(1, Math.abs(val));
+    const target = val >= 0 ? GREEN : RED;
+    const r = Math.round(GREY[0] + t * (target[0] - GREY[0]));
+    const g = Math.round(GREY[1] + t * (target[1] - GREY[1]));
+    const b = Math.round(GREY[2] + t * (target[2] - GREY[2]));
+    el.style.backgroundColor = `rgb(${r},${g},${b})`;
+    el.style.color = t > 0.4 ? 'white' : '#333';
     el.classList.remove('active', 'negative');
-    if (val > 0) el.classList.add('active');
-    else if (val < 0) el.classList.add('negative');
 }
 
 function toggleInput(index) {
@@ -109,7 +136,7 @@ function toggleInput(index) {
     inputs[index] = inputValueSet[(currentIdx + 1) % inputValueSet.length];
     const el = document.getElementById(`neuron_0_${index}`);
     el.textContent = inputs[index];
-    setInputNeuronClass(el, inputs[index]);
+    setNeuronActivation(el, inputs[index]);
     updateNetwork();
 }
 
@@ -137,7 +164,7 @@ function renderNeurons() {
                 const idx = j;
                 neuron.onclick = () => toggleInput(idx);
                 neuron.textContent = inputs[j];
-                setInputNeuronClass(neuron, inputs[j]);
+                setNeuronActivation(neuron, inputs[j]);
             } else {
                 neuron.textContent = '0';
             }
@@ -268,13 +295,11 @@ function updateNetwork() {
         for (let j = 0; j < sizes[l + 1]; j++) {
             let sum = biases[l][j];
             for (let i = 0; i < sizes[l]; i++) sum += activations[i] * weights[l][i][j];
-            const out = sum > 0 ? 1 : 0;
+            const out = activationFunctions[activationFn](sum);
             next.push(out);
             const el = document.getElementById(`neuron_${l + 1}_${j}`);
             if (el) {
-                el.textContent = out;
-                if (out === 1) el.classList.add('active');
-                else el.classList.remove('active');
+                setNeuronActivation(el, out);
 
                 const bias = biases[l][j];
                 if (bias === 0) {
