@@ -126,26 +126,27 @@
     </div>
 
     <div class="sliders-container">
-        <h3>Output Threshold</h3>
-        <div class="slider-wrapper">
-            <label for="threshold_slider">Threshold:</label>
-            <input type="range" id="threshold_slider" min="-5" max="5" step="0.1" value="0.5" oninput="updateNetwork()">
-            <span id="threshold_val">0.5</span>
-        </div>
-
         <h3>Input → Hidden Weights</h3>
         <div id="input_weights_sliders"></div>
 
+        <h3>Hidden Biases</h3>
+        <div id="hidden_biases_sliders"></div>
+
         <h3>Hidden → Output Weights</h3>
         <div id="hidden_weights_sliders"></div>
+
+        <h3>Output Bias</h3>
+        <div id="output_bias_slider"></div>
     </div>
 
     <script>
         // State variables
         let inputs = [0, 0];
         let numHidden = 3;
-        let weightsIn = [];  // 2D Array: weightsIn[input_idx][hidden_idx]
-        let weightsOut = []; // 1D Array: weightsOut[hidden_idx]
+        let weightsIn = [];   // 2D Array: weightsIn[input_idx][hidden_idx]
+        let weightsOut = [];  // 1D Array: weightsOut[hidden_idx]
+        let biasesHidden = []; // 1D Array: biasesHidden[hidden_idx]
+        let biasOut = 0;
 
         // Initialize weights and dynamic DOM elements
         function initNetwork() {
@@ -153,9 +154,11 @@
             numHidden = Math.max(1, Math.min(10, parseInt(inputCountEl.value) || 3));
             inputCountEl.value = numHidden;
 
-            // Initialize weights with default value 1.0 if they don't exist yet
+            // Initialize weights and biases with defaults
             weightsIn = [new Array(numHidden).fill(1.0), new Array(numHidden).fill(1.0)];
             weightsOut = new Array(numHidden).fill(1.0);
+            biasesHidden = new Array(numHidden).fill(0.0);
+            biasOut = 0.0;
 
             renderNeurons();
             renderSliders();
@@ -186,10 +189,14 @@
 
         function renderSliders() {
             const inSlidersContainer = document.getElementById('input_weights_sliders');
+            const hiddenBiasContainer = document.getElementById('hidden_biases_sliders');
             const outSlidersContainer = document.getElementById('hidden_weights_sliders');
-            
+            const outBiasContainer = document.getElementById('output_bias_slider');
+
             inSlidersContainer.innerHTML = '';
+            hiddenBiasContainer.innerHTML = '';
             outSlidersContainer.innerHTML = '';
+            outBiasContainer.innerHTML = '';
 
             // Generate Input to Hidden Sliders
             for (let i = 0; i < 2; i++) {
@@ -200,12 +207,24 @@
                 }
             }
 
+            // Generate Hidden Bias Sliders
+            for (let j = 0; j < numHidden; j++) {
+                hiddenBiasContainer.appendChild(createSliderMarkup(`b_hidden_${j}`, `B(H${j})`, 0.0, (val) => {
+                    biasesHidden[j] = val;
+                }));
+            }
+
             // Generate Hidden to Output Sliders
             for (let j = 0; j < numHidden; j++) {
                 outSlidersContainer.appendChild(createSliderMarkup(`w_out_${j}`, `W(H${j}→Out)`, 1.0, (val) => {
                     weightsOut[j] = val;
                 }));
             }
+
+            // Output Bias Slider
+            outBiasContainer.appendChild(createSliderMarkup(`b_out`, `B(Out)`, 0.0, (val) => {
+                biasOut = val;
+            }));
         }
 
         function createSliderMarkup(id, labelText, defaultVal, callback) {
@@ -219,8 +238,8 @@
             const slider = document.createElement('input');
             slider.type = 'range';
             slider.id = id;
-            slider.min = '-5';
-            slider.max = '5';
+            slider.min = '-2';
+            slider.max = '2';
             slider.step = '0.1';
             slider.value = defaultVal;
 
@@ -242,14 +261,11 @@
 
         // Forward propagation logic
         function updateNetwork() {
-            const threshold = parseFloat(document.getElementById('threshold_slider').value);
-            document.getElementById('threshold_val').textContent = threshold.toFixed(1);
-
             let hiddenStates = new Array(numHidden).fill(0);
 
-            // Calculate Hidden Layer States (Using 0 as standard Perceptron cutoff threshold)
+            // Calculate Hidden Layer States
             for (let j = 0; j < numHidden; j++) {
-                let sum = (inputs[0] * weightsIn[0][j]) + (inputs[1] * weightsIn[1][j]);
+                let sum = (inputs[0] * weightsIn[0][j]) + (inputs[1] * weightsIn[1][j]) + biasesHidden[j];
                 hiddenStates[j] = sum > 0 ? 1 : 0;
 
                 const neuronEl = document.getElementById(`hidden_${j}`);
@@ -261,12 +277,12 @@
             }
 
             // Calculate Output Layer State
-            let outputSum = 0;
+            let outputSum = biasOut;
             for (let j = 0; j < numHidden; j++) {
                 outputSum += hiddenStates[j] * weightsOut[j];
             }
 
-            const finalOutput = outputSum > threshold ? 1 : 0;
+            const finalOutput = outputSum > 0 ? 1 : 0;
             const outputEl = document.getElementById('output_0');
             outputEl.textContent = finalOutput;
             if (finalOutput === 1) outputEl.classList.add('active');
