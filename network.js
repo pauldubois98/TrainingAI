@@ -1,4 +1,5 @@
 // State
+let inputValueSet = [0, 1];
 let inputs = [0, 0];
 let numHiddenLayers = 1;
 let hiddenLayerSizes = [3]; // one entry per hidden layer
@@ -68,12 +69,47 @@ function initNetwork() {
     updateNetwork();
 }
 
+function onInputSetChange() {
+    const sel = document.getElementById('input_value_set');
+    const customRow = document.getElementById('custom_input_controls');
+    if (sel.value === 'binary') {
+        inputValueSet = [0, 1];
+        customRow.style.display = 'none';
+    } else if (sel.value === 'ternary') {
+        inputValueSet = [-1, 0, 1];
+        customRow.style.display = 'none';
+    } else {
+        customRow.style.display = '';
+        onCustomInputChange();
+        return;
+    }
+    inputs = inputs.map(v => inputValueSet.includes(v) ? v : inputValueSet[0]);
+    renderNeurons();
+    updateNetwork();
+}
+
+function onCustomInputChange() {
+    const raw = document.getElementById('custom_input_values').value;
+    const parsed = raw.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+    if (parsed.length < 2) return;
+    inputValueSet = parsed;
+    inputs = inputs.map(v => inputValueSet.includes(v) ? v : inputValueSet[0]);
+    renderNeurons();
+    updateNetwork();
+}
+
+function setInputNeuronClass(el, val) {
+    el.classList.remove('active', 'negative');
+    if (val > 0) el.classList.add('active');
+    else if (val < 0) el.classList.add('negative');
+}
+
 function toggleInput(index) {
-    inputs[index] = inputs[index] === 0 ? 1 : 0;
-    const btn = document.getElementById(`neuron_0_${index}`);
-    btn.textContent = inputs[index];
-    if (inputs[index] === 1) btn.classList.add('active');
-    else btn.classList.remove('active');
+    const currentIdx = inputValueSet.indexOf(inputs[index]);
+    inputs[index] = inputValueSet[(currentIdx + 1) % inputValueSet.length];
+    const el = document.getElementById(`neuron_0_${index}`);
+    el.textContent = inputs[index];
+    setInputNeuronClass(el, inputs[index]);
     updateNetwork();
 }
 
@@ -101,7 +137,7 @@ function renderNeurons() {
                 const idx = j;
                 neuron.onclick = () => toggleInput(idx);
                 neuron.textContent = inputs[j];
-                if (inputs[j] === 1) neuron.classList.add('active');
+                setInputNeuronClass(neuron, inputs[j]);
             } else {
                 neuron.textContent = '0';
             }

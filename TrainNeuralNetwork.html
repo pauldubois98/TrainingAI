@@ -12,6 +12,21 @@
 
     <div class="control-group">
         <span class="layer-size-control">
+            <label for="input_value_set">Input values:</label>
+            <select id="input_value_set" onchange="onInputSetChange()">
+                <option value="binary">Binary {0, 1}</option>
+                <option value="ternary">Ternary {−1, 0, 1}</option>
+                <option value="custom">Custom…</option>
+            </select>
+        </span>
+        <span class="layer-size-control" id="custom_input_controls" style="display:none;">
+            <label for="custom_input_values">Values (comma-separated):</label>
+            <input type="text" id="custom_input_values" value="0,1" style="width:8em;" onchange="onCustomInputChange()">
+        </span>
+    </div>
+
+    <div class="control-group">
+        <span class="layer-size-control">
             <label for="num_hidden_layers">Hidden Layers (0–3):</label>
             <input type="number" id="num_hidden_layers" min="0" max="3" value="1" onchange="onNumLayersChange()">
         </span>

@@ -87,6 +87,10 @@ h1 {
     background-color: #4CAF50;
     color: white;
 }
+.neuron.negative {
+    background-color: #e53935;
+    color: white;
+}
 .neuron.clickable {
     cursor: pointer;
     user-select: none;
