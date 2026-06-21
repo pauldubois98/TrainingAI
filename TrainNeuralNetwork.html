@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neural Network Sandbox</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f9f9f9;
+            color: #333;
+            padding: 2em;
+        }
+        h1 {
+            color: white;
+            background-color: black;
+            padding: 0.3em 0.6em;
+            text-align: center;
+            font-size: 1.8em;
+            margin-bottom: 1em;
+        }
+        .control-group {
+            margin-bottom: 2em;
+            text-align: center;
+        }
+        .network-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .layer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5em;
+        }
+        .neuron {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background-color: white;
+            transition: background-color 0.2s;
+        }
+        .neuron.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .neuron.clickable {
+            cursor: pointer;
+            user-select: none;
+        }
+        .neuron.clickable:hover {
+            transform: scale(1.05);
+        }
+        .sliders-container {
+            margin-top: 2em;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 1em;
+        }
+        .slider-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1em;
+        }
+        input[type="range"] {
+            flex-grow: 1;
+            max-width: 250px;
+        }
+        label {
+            font-size: 0.9em;
+            font-family: monospace;
+        }
+        h3 {
+            margin: 1em 0 0.5em 0;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 0.2em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>NN Sandbox</h1>
+
+    <div class="control-group">
+        <label for="hidden_count">Hidden Neurons (1-10): </label>
+        <input type="number" id="hidden_count" min="1" max="10" value="3" onchange="initNetwork()">
+    </div>
+
+    <div class="network-container">
+        <div class="layer">
+            <div>Inputs</div>
+            <div id="input_0" class="neuron clickable" onclick="toggleInput(0)">0</div>
+            <div id="input_1" class="neuron clickable" onclick="toggleInput(1)">0</div>
+        </div>
+
+        <div class="layer">
+            <div>Hidden</div>
+            <div id="hidden_layer_neurons" class="layer" style="gap: 0.8em;">
+                </div>
+        </div>
+
+        <div class="layer">
+            <div>Output</div>
+            <div id="output_0" class="neuron">0</div>
+        </div>
+    </div>
+
+    <div class="sliders-container">
+        <h3>Output Threshold</h3>
+        <div class="slider-wrapper">
+            <label for="threshold_slider">Threshold:</label>
+            <input type="range" id="threshold_slider" min="-5" max="5" step="0.1" value="0.5" oninput="updateNetwork()">
+            <span id="threshold_val">0.5</span>
+        </div>
+
+        <h3>Input → Hidden Weights</h3>
+        <div id="input_weights_sliders"></div>
+
+        <h3>Hidden → Output Weights</h3>
+        <div id="hidden_weights_sliders"></div>
+    </div>
+
+    <script>
+        // State variables
+        let inputs = [0, 0];
+        let numHidden = 3;
+        let weightsIn = [];  // 2D Array: weightsIn[input_idx][hidden_idx]
+        let weightsOut = []; // 1D Array: weightsOut[hidden_idx]
+
+        // Initialize weights and dynamic DOM elements
+        function initNetwork() {
+            const inputCountEl = document.getElementById('hidden_count');
+            numHidden = Math.max(1, Math.min(10, parseInt(inputCountEl.value) || 3));
+            inputCountEl.value = numHidden;
+
+            // Initialize weights with default value 1.0 if they don't exist yet
+            weightsIn = [new Array(numHidden).fill(1.0), new Array(numHidden).fill(1.0)];
+            weightsOut = new Array(numHidden).fill(1.0);
+
+            renderNeurons();
+            renderSliders();
+            updateNetwork();
+        }
+
+        function toggleInput(index) {
+            inputs[index] = inputs[index] === 0 ? 1 : 0;
+            const btn = document.getElementById(`input_${index}`);
+            btn.textContent = inputs[index];
+            if(inputs[index] === 1) btn.classList.add('active');
+            else btn.classList.remove('active');
+            
+            updateNetwork();
+        }
+
+        function renderNeurons() {
+            const hiddenContainer = document.getElementById('hidden_layer_neurons');
+            hiddenContainer.innerHTML = '';
+            for (let i = 0; i < numHidden; i++) {
+                const neuron = document.createElement('div');
+                neuron.id = `hidden_${i}`;
+                neuron.className = 'neuron';
+                neuron.textContent = '0';
+                hiddenContainer.appendChild(neuron);
+            }
+        }
+
+        function renderSliders() {
+            const inSlidersContainer = document.getElementById('input_weights_sliders');
+            const outSlidersContainer = document.getElementById('hidden_weights_sliders');
+            
+            inSlidersContainer.innerHTML = '';
+            outSlidersContainer.innerHTML = '';
+
+            // Generate Input to Hidden Sliders
+            for (let i = 0; i < 2; i++) {
+                for (let j = 0; j < numHidden; j++) {
+                    inSlidersContainer.appendChild(createSliderMarkup(`w_in_${i}_${j}`, `W(In${i}→H${j})`, 1.0, (val) => {
+                        weightsIn[i][j] = val;
+                    }));
+                }
+            }
+
+            // Generate Hidden to Output Sliders
+            for (let j = 0; j < numHidden; j++) {
+                outSlidersContainer.appendChild(createSliderMarkup(`w_out_${j}`, `W(H${j}→Out)`, 1.0, (val) => {
+                    weightsOut[j] = val;
+                }));
+            }
+        }
+
+        function createSliderMarkup(id, labelText, defaultVal, callback) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'slider-wrapper';
+
+            const label = document.createElement('label');
+            label.setAttribute('for', id);
+            label.textContent = `${labelText}:`;
+
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.id = id;
+            slider.min = '-5';
+            slider.max = '5';
+            slider.step = '0.1';
+            slider.value = defaultVal;
+
+            const valDisplay = document.createElement('span');
+            valDisplay.textContent = parseFloat(defaultVal).toFixed(1);
+
+            slider.oninput = (e) => {
+                const val = parseFloat(e.target.value);
+                valDisplay.textContent = val.toFixed(1);
+                callback(val);
+                updateNetwork();
+            };
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(slider);
+            wrapper.appendChild(valDisplay);
+            return wrapper;
+        }
+
+        // Forward propagation logic
+        function updateNetwork() {
+            const threshold = parseFloat(document.getElementById('threshold_slider').value);
+            document.getElementById('threshold_val').textContent = threshold.toFixed(1);
+
+            let hiddenStates = new Array(numHidden).fill(0);
+
+            // Calculate Hidden Layer States (Using 0 as standard Perceptron cutoff threshold)
+            for (let j = 0; j < numHidden; j++) {
+                let sum = (inputs[0] * weightsIn[0][j]) + (inputs[1] * weightsIn[1][j]);
+                hiddenStates[j] = sum > 0 ? 1 : 0;
+
+                const neuronEl = document.getElementById(`hidden_${j}`);
+                if (neuronEl) {
+                    neuronEl.textContent = hiddenStates[j];
+                    if (hiddenStates[j] === 1) neuronEl.classList.add('active');
+                    else neuronEl.classList.remove('active');
+                }
+            }
+
+            // Calculate Output Layer State
+            let outputSum = 0;
+            for (let j = 0; j < numHidden; j++) {
+                outputSum += hiddenStates[j] * weightsOut[j];
+            }
+
+            const finalOutput = outputSum > threshold ? 1 : 0;
+            const outputEl = document.getElementById('output_0');
+            outputEl.textContent = finalOutput;
+            if (finalOutput === 1) outputEl.classList.add('active');
+            else outputEl.classList.remove('active');
+        }
+
+        // Start the engine
+        initNetwork();
+    </script>
+</body>
+</html>
