@@ -17,7 +17,31 @@ h1 {
 }
 .control-group {
     margin-bottom: 2em;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6em;
+}
+#layer_size_controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6em;
+}
+.layer-size-control {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+}
+.layer-size-control input {
+    width: 3.5em;
+}
+.network-layers {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    gap: 1em;
 }
 .network-container {
     display: flex;

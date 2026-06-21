@@ -11,41 +11,20 @@
     <h1>NN Sandbox</h1>
 
     <div class="control-group">
-        <label for="hidden_count">Hidden Neurons (1-10): </label>
-        <input type="number" id="hidden_count" min="1" max="10" value="3" onchange="initNetwork()">
+        <span class="layer-size-control">
+            <label for="num_hidden_layers">Hidden Layers (0–3):</label>
+            <input type="number" id="num_hidden_layers" min="0" max="3" value="1" onchange="onNumLayersChange()">
+        </span>
+        <span id="layer_size_controls"></span>
     </div>
 
     <div class="network-container">
         <svg id="network_svg"></svg>
-        <div class="layer">
-            <div>Inputs</div>
-            <div id="input_0" class="neuron clickable" onclick="toggleInput(0)">0</div>
-            <div id="input_1" class="neuron clickable" onclick="toggleInput(1)">0</div>
-        </div>
-
-        <div class="layer">
-            <div>Hidden</div>
-            <div id="hidden_layer_neurons" class="layer" style="gap: 0.8em;"></div>
-        </div>
-
-        <div class="layer">
-            <div>Output</div>
-            <div id="output_0" class="neuron">0</div>
-        </div>
+        <div id="network_layers" class="network-layers"></div>
     </div>
 
     <div class="sliders-container">
-        <h3>Input → Hidden Weights</h3>
-        <div id="input_weights_sliders"></div>
-
-        <h3>Hidden Biases</h3>
-        <div id="hidden_biases_sliders"></div>
-
-        <h3>Hidden → Output Weights</h3>
-        <div id="hidden_weights_sliders"></div>
-
-        <h3>Output Bias</h3>
-        <div id="output_bias_slider"></div>
+        <div id="sliders_content"></div>
     </div>
 
     <script src="network.js"></script>

@@ -1,21 +1,68 @@
 // State
 let inputs = [0, 0];
-let numHidden = 3;
-let weightsIn = [];    // weightsIn[input_idx][hidden_idx]
-let weightsOut = [];   // weightsOut[hidden_idx]
-let biasesHidden = []; // biasesHidden[hidden_idx]
-let biasOut = 0;
+let numHiddenLayers = 1;
+let hiddenLayerSizes = [3]; // one entry per hidden layer
+
+// weights[l][i][j]: weight from neuron i in layer l to neuron j in layer l+1
+// biases[l][j]:     bias for neuron j in layer l+1
+let weights = [];
+let biases = [];
+
+function getAllLayerSizes() {
+    return [2, ...hiddenLayerSizes, 1];
+}
+
+// l is the absolute layer index (0 = input, last = output)
+function hiddenLayerName(l, short = false) {
+    if (numHiddenLayers === 1) return short ? 'H' : 'Hidden';
+    return short ? `H${l}` : `Hidden ${l}`;
+}
+
+// Called when the hidden layer count input changes
+function onNumLayersChange() {
+    const el = document.getElementById('num_hidden_layers');
+    numHiddenLayers = Math.max(0, Math.min(3, parseInt(el.value) || 0));
+    el.value = numHiddenLayers;
+    // Preserve existing sizes; pad with default 3
+    hiddenLayerSizes = hiddenLayerSizes.slice(0, numHiddenLayers);
+    while (hiddenLayerSizes.length < numHiddenLayers) hiddenLayerSizes.push(3);
+    renderLayerSizeControls();
+    initNetwork();
+}
+
+function renderLayerSizeControls() {
+    const container = document.getElementById('layer_size_controls');
+    container.innerHTML = '';
+    for (let l = 0; l < numHiddenLayers; l++) {
+        const wrapper = document.createElement('span');
+        wrapper.className = 'layer-size-control';
+        const label = document.createElement('label');
+        label.textContent = `Layer ${l + 1} neurons:`;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '1';
+        input.max = '10';
+        input.value = hiddenLayerSizes[l];
+        const idx = l;
+        input.onchange = () => {
+            hiddenLayerSizes[idx] = Math.max(1, Math.min(10, parseInt(input.value) || 1));
+            input.value = hiddenLayerSizes[idx];
+            initNetwork();
+        };
+        wrapper.appendChild(label);
+        wrapper.appendChild(input);
+        container.appendChild(wrapper);
+    }
+}
 
 function initNetwork() {
-    const inputCountEl = document.getElementById('hidden_count');
-    numHidden = Math.max(1, Math.min(10, parseInt(inputCountEl.value) || 3));
-    inputCountEl.value = numHidden;
-
-    weightsIn = [new Array(numHidden).fill(0.0), new Array(numHidden).fill(0.0)];
-    weightsOut = new Array(numHidden).fill(0.0);
-    biasesHidden = new Array(numHidden).fill(0.0);
-    biasOut = 0.0;
-
+    const sizes = getAllLayerSizes();
+    weights = [];
+    biases = [];
+    for (let l = 0; l < sizes.length - 1; l++) {
+        weights[l] = Array.from({length: sizes[l]}, () => new Array(sizes[l + 1]).fill(0));
+        biases[l] = new Array(sizes[l + 1]).fill(0);
+    }
     renderNeurons();
     renderSliders();
     updateNetwork();
@@ -23,7 +70,7 @@ function initNetwork() {
 
 function toggleInput(index) {
     inputs[index] = inputs[index] === 0 ? 1 : 0;
-    const btn = document.getElementById(`input_${index}`);
+    const btn = document.getElementById(`neuron_0_${index}`);
     btn.textContent = inputs[index];
     if (inputs[index] === 1) btn.classList.add('active');
     else btn.classList.remove('active');
@@ -31,39 +78,81 @@ function toggleInput(index) {
 }
 
 function renderNeurons() {
-    const hiddenContainer = document.getElementById('hidden_layer_neurons');
-    hiddenContainer.innerHTML = '';
-    for (let i = 0; i < numHidden; i++) {
-        const neuron = document.createElement('div');
-        neuron.id = `hidden_${i}`;
-        neuron.className = 'neuron';
-        neuron.textContent = '0';
-        hiddenContainer.appendChild(neuron);
+    const container = document.getElementById('network_layers');
+    container.innerHTML = '';
+    const sizes = getAllLayerSizes();
+
+    for (let l = 0; l < sizes.length; l++) {
+        const layerDiv = document.createElement('div');
+        layerDiv.className = 'layer';
+
+        const labelDiv = document.createElement('div');
+        if (l === 0) labelDiv.textContent = 'Inputs';
+        else if (l === sizes.length - 1) labelDiv.textContent = 'Output';
+        else labelDiv.textContent = hiddenLayerName(l);
+        layerDiv.appendChild(labelDiv);
+
+        for (let j = 0; j < sizes[l]; j++) {
+            const neuron = document.createElement('div');
+            neuron.id = `neuron_${l}_${j}`;
+            neuron.className = 'neuron';
+            if (l === 0) {
+                neuron.classList.add('clickable');
+                const idx = j;
+                neuron.onclick = () => toggleInput(idx);
+                neuron.textContent = inputs[j];
+                if (inputs[j] === 1) neuron.classList.add('active');
+            } else {
+                neuron.textContent = '0';
+            }
+            layerDiv.appendChild(neuron);
+        }
+        container.appendChild(layerDiv);
     }
 }
 
 function renderSliders() {
-    const inSlidersContainer = document.getElementById('input_weights_sliders');
-    const hiddenBiasContainer = document.getElementById('hidden_biases_sliders');
-    const outSlidersContainer = document.getElementById('hidden_weights_sliders');
-    const outBiasContainer = document.getElementById('output_bias_slider');
+    const container = document.getElementById('sliders_content');
+    container.innerHTML = '';
+    const sizes = getAllLayerSizes();
 
-    inSlidersContainer.innerHTML = '';
-    hiddenBiasContainer.innerHTML = '';
-    outSlidersContainer.innerHTML = '';
-    outBiasContainer.innerHTML = '';
+    for (let l = 0; l < sizes.length - 1; l++) {
+        const fromLabel = l === 0 ? 'In' : hiddenLayerName(l, true);
+        const toLabel = l === sizes.length - 2 ? 'Out' : hiddenLayerName(l + 1, true);
 
-    for (let i = 0; i < 2; i++)
-        for (let j = 0; j < numHidden; j++)
-            inSlidersContainer.appendChild(createSliderMarkup(`w_in_${i}_${j}`, `W(In${i}→H${j})`, 0.0, (val) => { weightsIn[i][j] = val; }));
+        const wHeader = document.createElement('h3');
+        wHeader.textContent = `${fromLabel} → ${toLabel} Weights`;
+        container.appendChild(wHeader);
 
-    for (let j = 0; j < numHidden; j++)
-        hiddenBiasContainer.appendChild(createSliderMarkup(`b_hidden_${j}`, `B(H${j})`, 0.0, (val) => { biasesHidden[j] = val; }));
+        for (let i = 0; i < sizes[l]; i++) {
+            for (let j = 0; j < sizes[l + 1]; j++) {
+                const fromName = l === 0 ? `In${i}` : `${hiddenLayerName(l, true)}_${i}`;
+                const toName = l === sizes.length - 2 ? 'Out' : `${hiddenLayerName(l + 1, true)}_${j}`;
+                const li = i, lj = j, ll = l;
+                container.appendChild(createSliderMarkup(
+                    `w_${l}_${i}_${j}`,
+                    `W(${fromName}→${toName})`,
+                    0.0,
+                    (val) => { weights[ll][li][lj] = val; }
+                ));
+            }
+        }
 
-    for (let j = 0; j < numHidden; j++)
-        outSlidersContainer.appendChild(createSliderMarkup(`w_out_${j}`, `W(H${j}→Out)`, 0.0, (val) => { weightsOut[j] = val; }));
+        const bHeader = document.createElement('h3');
+        bHeader.textContent = `${toLabel} Biases`;
+        container.appendChild(bHeader);
 
-    outBiasContainer.appendChild(createSliderMarkup(`b_out`, `B(Out)`, 0.0, (val) => { biasOut = val; }));
+        for (let j = 0; j < sizes[l + 1]; j++) {
+            const neuronName = l === sizes.length - 2 ? 'Out' : `${hiddenLayerName(l + 1, true)}_${j}`;
+            const lj = j, ll = l;
+            container.appendChild(createSliderMarkup(
+                `b_${l}_${j}`,
+                `B(${neuronName})`,
+                0.0,
+                (val) => { biases[ll][lj] = val; }
+            ));
+        }
+    }
 }
 
 function createSliderMarkup(id, labelText, defaultVal, callback) {
@@ -102,6 +191,7 @@ function renderLinks() {
     const svg = document.getElementById('network_svg');
     svg.innerHTML = '';
     const containerRect = svg.parentElement.getBoundingClientRect();
+    const sizes = getAllLayerSizes();
 
     function drawLine(fromEl, toEl, weight) {
         if (!fromEl || !toEl || weight === 0) return;
@@ -120,40 +210,43 @@ function renderLinks() {
         svg.appendChild(line);
     }
 
-    for (let i = 0; i < 2; i++)
-        for (let j = 0; j < numHidden; j++)
-            drawLine(document.getElementById(`input_${i}`), document.getElementById(`hidden_${j}`), weightsIn[i][j]);
-
-    for (let j = 0; j < numHidden; j++)
-        drawLine(document.getElementById(`hidden_${j}`), document.getElementById('output_0'), weightsOut[j]);
+    for (let l = 0; l < sizes.length - 1; l++) {
+        for (let i = 0; i < sizes[l]; i++) {
+            for (let j = 0; j < sizes[l + 1]; j++) {
+                drawLine(
+                    document.getElementById(`neuron_${l}_${i}`),
+                    document.getElementById(`neuron_${l + 1}_${j}`),
+                    weights[l][i][j]
+                );
+            }
+        }
+    }
 }
 
 function updateNetwork() {
-    let hiddenStates = new Array(numHidden).fill(0);
+    const sizes = getAllLayerSizes();
+    let activations = [...inputs];
 
-    for (let j = 0; j < numHidden; j++) {
-        let sum = (inputs[0] * weightsIn[0][j]) + (inputs[1] * weightsIn[1][j]) + biasesHidden[j];
-        hiddenStates[j] = sum > 0 ? 1 : 0;
-
-        const neuronEl = document.getElementById(`hidden_${j}`);
-        if (neuronEl) {
-            neuronEl.textContent = hiddenStates[j];
-            if (hiddenStates[j] === 1) neuronEl.classList.add('active');
-            else neuronEl.classList.remove('active');
+    for (let l = 0; l < sizes.length - 1; l++) {
+        const next = [];
+        for (let j = 0; j < sizes[l + 1]; j++) {
+            let sum = biases[l][j];
+            for (let i = 0; i < sizes[l]; i++) sum += activations[i] * weights[l][i][j];
+            const out = sum > 0 ? 1 : 0;
+            next.push(out);
+            const el = document.getElementById(`neuron_${l + 1}_${j}`);
+            if (el) {
+                el.textContent = out;
+                if (out === 1) el.classList.add('active');
+                else el.classList.remove('active');
+            }
         }
+        activations = next;
     }
-
-    let outputSum = biasOut;
-    for (let j = 0; j < numHidden; j++)
-        outputSum += hiddenStates[j] * weightsOut[j];
-
-    const finalOutput = outputSum > 0 ? 1 : 0;
-    const outputEl = document.getElementById('output_0');
-    outputEl.textContent = finalOutput;
-    if (finalOutput === 1) outputEl.classList.add('active');
-    else outputEl.classList.remove('active');
 
     renderLinks();
 }
 
+// Boot
+renderLayerSizeControls();
 initNetwork();
