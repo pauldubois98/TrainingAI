@@ -73,20 +73,19 @@ h1 {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 2px solid black;
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    background-color: white;
-    transition: background-color 0.2s;
+    background-color: #ddd;
+    transition: background-color 0.2s, outline 0.2s;
     position: relative;
     z-index: 1;
 }
 .neuron.active {
     background-color: #4CAF50;
     color: white;
-    border-color: #4CAF50;
 }
 .neuron.clickable {
     cursor: pointer;

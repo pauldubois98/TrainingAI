@@ -239,6 +239,15 @@ function updateNetwork() {
                 el.textContent = out;
                 if (out === 1) el.classList.add('active');
                 else el.classList.remove('active');
+
+                const bias = biases[l][j];
+                if (bias === 0) {
+                    el.style.outline = 'none';
+                } else {
+                    const color = bias > 0 ? '#4CAF50' : '#e53935';
+                    const width = 2 + Math.abs(bias) * 6;
+                    el.style.outline = `${width}px solid ${color}`;
+                }
             }
         }
         activations = next;
