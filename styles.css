@@ -36,6 +36,11 @@ h1 {
 .layer-size-control input {
     width: 3.5em;
 }
+#activation_plot {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+}
 .network-layers {
     display: flex;
     justify-content: space-around;

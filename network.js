@@ -108,7 +108,55 @@ function onCustomInputChange() {
 
 function onActivationFnChange() {
     activationFn = document.getElementById('activation_fn').value;
+    drawActivationPlot();
     updateNetwork();
+}
+
+function drawActivationPlot() {
+    const canvas = document.getElementById('activation_plot');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const pad = 6;
+    const plotW = W - 2 * pad, plotH = H - 2 * pad;
+
+    const xMin = -3, xMax = 3, yMin = -1.5, yMax = 1.5;
+    const toX = x => pad + (x - xMin) / (xMax - xMin) * plotW;
+    const toY = y => pad + (1 - (y - yMin) / (yMax - yMin)) * plotH;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Axes
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(pad, toY(0)); ctx.lineTo(pad + plotW, toY(0)); // x-axis
+    ctx.moveTo(toX(0), pad); ctx.lineTo(toX(0), pad + plotH); // y-axis
+    ctx.stroke();
+
+    // Curve
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1.5;
+    const fn = activationFunctions[activationFn];
+
+    if (activationFn === 'step') {
+        const x0 = toX(0), y0 = toY(0), y1 = toY(1);
+        ctx.beginPath(); ctx.moveTo(pad, y0); ctx.lineTo(x0, y0); ctx.stroke();
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(x0, y1); ctx.lineTo(pad + plotW, y1); ctx.stroke();
+    } else {
+        ctx.save();
+        ctx.beginPath(); ctx.rect(pad, pad, plotW, plotH); ctx.clip();
+        ctx.beginPath();
+        for (let px = 0; px <= plotW; px++) {
+            const x = xMin + (px / plotW) * (xMax - xMin);
+            const cy = toY(fn(x));
+            px === 0 ? ctx.moveTo(pad + px, cy) : ctx.lineTo(pad + px, cy);
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
 }
 
 function formatVal(v) {
@@ -320,3 +368,4 @@ function updateNetwork() {
 // Boot
 renderLayerSizeControls();
 initNetwork();
+drawActivationPlot();
