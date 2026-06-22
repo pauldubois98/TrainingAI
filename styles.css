@@ -36,6 +36,20 @@ h1 {
 .layer-size-control input {
     width: 3.5em;
 }
+#neuron_tooltip {
+    position: fixed;
+    display: none;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 0.5em 0.7em;
+    font-size: 0.82em;
+    font-family: monospace;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    white-space: nowrap;
+}
 .activation-plot {
     border: 1px solid #ccc;
     border-radius: 4px;

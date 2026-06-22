@@ -17,6 +17,9 @@ let hiddenLayerSizes = [3]; // one entry per hidden layer
 // biases[l][j]:     bias for neuron j in layer l+1
 let weights = [];
 let biases = [];
+let lastActivations = []; // lastActivations[l][j] = post-activation output at layer l, neuron j
+let lastSums = [];         // lastSums[l][j]  = pre-activation sum at layer l+1, neuron j
+let hoveredNeuron = null;  // { l, j } while tooltip is visible
 
 function getAllLayerSizes() {
     return [2, ...hiddenLayerSizes, 1];
@@ -278,6 +281,10 @@ function renderNeurons() {
             } else {
                 neuron.textContent = '0';
             }
+            const ll = l, jj = j;
+            neuron.addEventListener('mouseenter', e => showTooltip(e, ll, jj));
+            neuron.addEventListener('mousemove',  e => moveTooltip(e));
+            neuron.addEventListener('mouseleave', hideTooltip);
             layerDiv.appendChild(neuron);
         }
         container.appendChild(layerDiv);
@@ -398,20 +405,22 @@ function renderLinks() {
 
 function updateNetwork() {
     const sizes = getAllLayerSizes();
+    lastActivations = [[...inputs]];
+    lastSums = [];
     let activations = [...inputs];
 
     for (let l = 0; l < sizes.length - 1; l++) {
-        const next = [];
+        const next = [], sums = [];
         for (let j = 0; j < sizes[l + 1]; j++) {
             let sum = biases[l][j];
             for (let i = 0; i < sizes[l]; i++) sum += activations[i] * weights[l][i][j];
             const fnName = globalActivation === 'per_layer' ? layerActivations[l] : globalActivation;
             const out = activationFunctions[fnName](sum);
+            sums.push(sum);
             next.push(out);
             const el = document.getElementById(`neuron_${l + 1}_${j}`);
             if (el) {
                 setNeuronActivation(el, out);
-
                 const bias = biases[l][j];
                 if (bias === 0) {
                     el.style.outline = 'none';
@@ -422,10 +431,72 @@ function updateNetwork() {
                 }
             }
         }
+        lastSums.push(sums);
+        lastActivations.push(next);
         activations = next;
     }
 
     renderLinks();
+    if (hoveredNeuron) refreshTooltipContent();
+}
+
+function neuronSourceName(srcLayer, i) {
+    return srcLayer === 0 ? `In${i}` : `${hiddenLayerName(srcLayer, true)}_${i}`;
+}
+
+function refreshTooltipContent() {
+    const { l, j } = hoveredNeuron;
+    const tooltip = document.getElementById('neuron_tooltip');
+    const sizes = getAllLayerSizes();
+    let html = '';
+
+    if (l === 0) {
+        html = `<b>Input</b><br>Value: ${formatVal(inputs[j])}`;
+    } else {
+        const fnName = globalActivation === 'per_layer' ? layerActivations[l - 1] : globalActivation;
+        const sum = lastSums[l - 1][j];
+        const out = lastActivations[l][j];
+        const srcSize = sizes[l - 1];
+
+        html = '<table>';
+        for (let i = 0; i < srcSize; i++) {
+            const a = lastActivations[l - 1][i];
+            const w = weights[l - 1][i][j];
+            const contrib = a * w;
+            const sign = i === 0 ? '' : (contrib >= 0 ? '+ ' : '− ');
+            html += `<tr>
+                <td style="text-align:right;padding-right:0.3em">${sign}${formatVal(Math.abs(contrib))}</td>
+                <td style="color:#888">(${formatVal(a)} × ${formatVal(w)}, ${neuronSourceName(l - 1, i)})</td>
+            </tr>`;
+        }
+        const biasVal = biases[l - 1][j];
+        const biasSign = biasVal >= 0 ? '+ ' : '− ';
+        html += `<tr><td style="text-align:right;padding-right:0.3em;border-top:1px solid #ccc">${biasSign}${formatVal(Math.abs(biasVal))}</td><td style="color:#888;border-top:1px solid #ccc">(bias)</td></tr>`;
+        html += `<tr><td style="text-align:right;padding-right:0.3em"><b>= ${formatVal(sum)}</b></td><td style="color:#888">(sum)</td></tr>`;
+        html += '</table>';
+        html += `<div style="margin-top:0.3em">${fnName}(${formatVal(sum)}) = <b>${formatVal(out)}</b></div>`;
+    }
+
+    tooltip.innerHTML = html;
+}
+
+function showTooltip(e, l, j) {
+    hoveredNeuron = { l, j };
+    refreshTooltipContent();
+    const tooltip = document.getElementById('neuron_tooltip');
+    tooltip.style.display = 'block';
+    moveTooltip(e);
+}
+
+function moveTooltip(e) {
+    const tooltip = document.getElementById('neuron_tooltip');
+    tooltip.style.left = (e.clientX + 14) + 'px';
+    tooltip.style.top  = (e.clientY + 14) + 'px';
+}
+
+function hideTooltip() {
+    hoveredNeuron = null;
+    document.getElementById('neuron_tooltip').style.display = 'none';
 }
 
 // Boot
