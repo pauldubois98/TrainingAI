@@ -40,10 +40,18 @@
 
     <div class="control-group">
         <span class="layer-size-control">
-            <label for="num_hidden_layers">Hidden Layers (0–3):</label>
+            <label for="num_input_neurons">Input neurons:</label>
+            <input type="number" id="num_input_neurons" min="1" max="10" value="2" onchange="onNumInputsChange()">
+        </span>
+        <span class="layer-size-control">
+            <label for="num_hidden_layers">Hidden Layers:</label>
             <input type="number" id="num_hidden_layers" min="0" max="3" value="1" onchange="onNumLayersChange()">
         </span>
         <span id="layer_size_controls"></span>
+        <span class="layer-size-control">
+            <label for="num_output_neurons">Output neurons:</label>
+            <input type="number" id="num_output_neurons" min="1" max="10" value="1" onchange="onNumOutputsChange()">
+        </span>
     </div>
 
     <div class="network-container">

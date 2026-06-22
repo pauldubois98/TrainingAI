@@ -1,5 +1,7 @@
 // State
 let inputValueSet = [0, 1];
+let numInputNeurons = 2;
+let numOutputNeurons = 1;
 let inputs = [0, 0];
 let globalActivation = 'step'; // 'step' | 'relu' | 'sigmoid' | 'tanh' | 'linear' | 'per_layer'
 let layerActivations = []; // used only when globalActivation === 'per_layer'
@@ -22,7 +24,24 @@ let lastSums = [];         // lastSums[l][j]  = pre-activation sum at layer l+1,
 let hoveredNeuron = null;  // { l, j } while tooltip is visible
 
 function getAllLayerSizes() {
-    return [2, ...hiddenLayerSizes, 1];
+    return [numInputNeurons, ...hiddenLayerSizes, numOutputNeurons];
+}
+
+function onNumInputsChange() {
+    const el = document.getElementById('num_input_neurons');
+    numInputNeurons = Math.max(1, Math.min(10, parseInt(el.value) || 1));
+    el.value = numInputNeurons;
+    // Resize inputs array: trim or pad with first value in set
+    while (inputs.length < numInputNeurons) inputs.push(inputValueSet[0]);
+    inputs = inputs.slice(0, numInputNeurons);
+    initNetwork();
+}
+
+function onNumOutputsChange() {
+    const el = document.getElementById('num_output_neurons');
+    numOutputNeurons = Math.max(1, Math.min(10, parseInt(el.value) || 1));
+    el.value = numOutputNeurons;
+    initNetwork();
 }
 
 // l is the absolute layer index (0 = input, last = output)
@@ -98,7 +117,8 @@ function onInputSetChange() {
         onCustomInputChange();
         return;
     }
-    inputs = inputs.map(v => inputValueSet.includes(v) ? v : inputValueSet[0]);
+    inputs = Array.from({length: numInputNeurons}, (_, i) =>
+        inputValueSet.includes(inputs[i]) ? inputs[i] : inputValueSet[0]);
     renderNeurons();
     updateNetwork();
 }
@@ -106,9 +126,10 @@ function onInputSetChange() {
 function onCustomInputChange() {
     const raw = document.getElementById('custom_input_values').value;
     const parsed = raw.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
-    if (parsed.length < 2) return;
+    if (parsed.length < 1) return;
     inputValueSet = parsed;
-    inputs = inputs.map(v => inputValueSet.includes(v) ? v : inputValueSet[0]);
+    inputs = Array.from({length: numInputNeurons}, (_, i) =>
+        inputValueSet.includes(inputs[i]) ? inputs[i] : inputValueSet[0]);
     renderNeurons();
     updateNetwork();
 }
