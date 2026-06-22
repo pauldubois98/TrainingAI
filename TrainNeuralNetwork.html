@@ -12,16 +12,18 @@
 
     <div class="control-group">
         <span class="layer-size-control">
-            <label for="activation_fn">Activation:</label>
-            <select id="activation_fn" onchange="onActivationFnChange()">
+            <label for="global_activation">Activation:</label>
+            <select id="global_activation" onchange="onGlobalActivationChange()">
                 <option value="step">Step</option>
                 <option value="relu">ReLU</option>
                 <option value="sigmoid">Sigmoid</option>
                 <option value="tanh">Tanh</option>
                 <option value="linear">Linear</option>
+                <option value="per_layer">Per layer…</option>
             </select>
-            <canvas id="activation_plot" width="100" height="64"></canvas>
+            <canvas id="global_activation_plot" width="100" height="64" class="activation-plot"></canvas>
         </span>
+        <span id="layer_activation_controls" style="display:none;"></span>
         <span class="layer-size-control">
             <label for="input_value_set">Input values:</label>
             <select id="input_value_set" onchange="onInputSetChange()">

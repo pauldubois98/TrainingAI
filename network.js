@@ -1,7 +1,8 @@
 // State
 let inputValueSet = [0, 1];
 let inputs = [0, 0];
-let activationFn = 'step';
+let globalActivation = 'relu'; // 'relu' | 'tanh' | 'linear' | 'per_layer'
+let layerActivations = []; // used only when globalActivation === 'per_layer'
 const activationFunctions = {
     step:    x => x > 0 ? 1 : 0,
     relu:    x => Math.max(0, x),
@@ -66,6 +67,8 @@ function renderLayerSizeControls() {
 
 function initNetwork() {
     const sizes = getAllLayerSizes();
+    const prev = [...layerActivations];
+    layerActivations = Array.from({length: sizes.length - 1}, (_, l) => prev[l] || 'step');
     weights = [];
     biases = [];
     for (let l = 0; l < sizes.length - 1; l++) {
@@ -73,6 +76,7 @@ function initNetwork() {
         biases[l] = new Array(sizes[l + 1]).fill(0);
     }
     renderNeurons();
+    if (globalActivation === 'per_layer') renderLayerActivationControls();
     renderSliders();
     updateNetwork();
 }
@@ -106,14 +110,72 @@ function onCustomInputChange() {
     updateNetwork();
 }
 
-function onActivationFnChange() {
-    activationFn = document.getElementById('activation_fn').value;
-    drawActivationPlot();
+function onGlobalActivationChange() {
+    const prev = globalActivation;
+    globalActivation = document.getElementById('global_activation').value;
+    const layerControls = document.getElementById('layer_activation_controls');
+    const globalPlot = document.getElementById('global_activation_plot');
+    if (globalActivation === 'per_layer') {
+        if (prev !== 'per_layer')
+            layerActivations = layerActivations.map(() => prev);
+        renderLayerActivationControls();
+        layerControls.style.display = '';
+        globalPlot.style.display = 'none';
+    } else {
+        layerControls.style.display = 'none';
+        globalPlot.style.display = '';
+        drawActivationPlot(globalPlot, globalActivation);
+    }
     updateNetwork();
 }
 
-function drawActivationPlot() {
-    const canvas = document.getElementById('activation_plot');
+function renderLayerActivationControls() {
+    const container = document.getElementById('layer_activation_controls');
+    container.innerHTML = '';
+    const sizes = getAllLayerSizes();
+    const FN_NAMES = ['step', 'relu', 'sigmoid', 'tanh', 'linear'];
+
+    for (let l = 0; l < sizes.length - 1; l++) {
+        const isOutput = l === sizes.length - 2;
+        const layerLabel = isOutput ? 'Output' : hiddenLayerName(l + 1);
+
+        const wrapper = document.createElement('span');
+        wrapper.className = 'layer-size-control';
+
+        const label = document.createElement('label');
+        label.textContent = `${layerLabel} activation:`;
+
+        const select = document.createElement('select');
+        FN_NAMES.forEach(fn => {
+            const opt = document.createElement('option');
+            opt.value = fn;
+            opt.textContent = fn.charAt(0).toUpperCase() + fn.slice(1);
+            opt.selected = layerActivations[l] === fn;
+            select.appendChild(opt);
+        });
+
+        const canvasEl = document.createElement('canvas');
+        canvasEl.width = 100;
+        canvasEl.height = 64;
+        canvasEl.className = 'activation-plot';
+
+        const ll = l;
+        select.onchange = () => {
+            layerActivations[ll] = select.value;
+            drawActivationPlot(canvasEl, select.value);
+            updateNetwork();
+        };
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(select);
+        wrapper.appendChild(canvasEl);
+        container.appendChild(wrapper);
+
+        drawActivationPlot(canvasEl, layerActivations[l]);
+    }
+}
+
+function drawActivationPlot(canvas, fnName) {
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
     const pad = 6;
@@ -136,9 +198,9 @@ function drawActivationPlot() {
     // Curve
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1.5;
-    const fn = activationFunctions[activationFn];
+    const fn = activationFunctions[fnName];
 
-    if (activationFn === 'step') {
+    if (fnName === 'step') {
         const x0 = toX(0), y0 = toY(0), y1 = toY(1);
         ctx.beginPath(); ctx.moveTo(pad, y0); ctx.lineTo(x0, y0); ctx.stroke();
         ctx.setLineDash([2, 2]);
@@ -343,7 +405,8 @@ function updateNetwork() {
         for (let j = 0; j < sizes[l + 1]; j++) {
             let sum = biases[l][j];
             for (let i = 0; i < sizes[l]; i++) sum += activations[i] * weights[l][i][j];
-            const out = activationFunctions[activationFn](sum);
+            const fnName = globalActivation === 'per_layer' ? layerActivations[l] : globalActivation;
+            const out = activationFunctions[fnName](sum);
             next.push(out);
             const el = document.getElementById(`neuron_${l + 1}_${j}`);
             if (el) {
@@ -368,4 +431,4 @@ function updateNetwork() {
 // Boot
 renderLayerSizeControls();
 initNetwork();
-drawActivationPlot();
+drawActivationPlot(document.getElementById('global_activation_plot'), globalActivation);

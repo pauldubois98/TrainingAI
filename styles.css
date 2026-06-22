@@ -36,7 +36,7 @@ h1 {
 .layer-size-control input {
     width: 3.5em;
 }
-#activation_plot {
+.activation-plot {
     border: 1px solid #ccc;
     border-radius: 4px;
     background: white;
