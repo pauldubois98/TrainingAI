@@ -1,7 +1,7 @@
 // State
 let inputValueSet = [0, 1];
 let inputs = [0, 0];
-let globalActivation = 'relu'; // 'relu' | 'tanh' | 'linear' | 'per_layer'
+let globalActivation = 'step'; // 'step' | 'relu' | 'sigmoid' | 'tanh' | 'linear' | 'per_layer'
 let layerActivations = []; // used only when globalActivation === 'per_layer'
 const activationFunctions = {
     step:    x => x > 0 ? 1 : 0,
