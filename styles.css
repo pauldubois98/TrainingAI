@@ -202,6 +202,19 @@ section {
     transform: scale(1.05);
 }
 
+.neuron-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+}
+.neuron-name {
+    font-family: monospace;
+    font-size: 1.2em;
+    color: #555;
+    text-align: right;
+    min-width: 2.5em;
+}
+
 /* ── Tool page: sliders ─────────────────────────────────────────────────── */
 .sliders-container {
     margin-top: 2em;

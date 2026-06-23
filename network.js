@@ -3,6 +3,7 @@ let inputValueSet = [0, 1];
 let numInputNeurons = 2;
 let numOutputNeurons = 1;
 let inputs = [0, 0];
+let inputNames = []; // optional display names for input neurons
 let globalActivation = 'step'; // 'step' | 'relu' | 'sigmoid' | 'tanh' | 'linear' | 'per_layer'
 let layerActivations = []; // used only when globalActivation === 'per_layer'
 const activationFunctions = {
@@ -31,9 +32,10 @@ function onNumInputsChange() {
     const el = document.getElementById('num_input_neurons');
     numInputNeurons = Math.max(1, Math.min(10, parseInt(el.value) || 1));
     el.value = numInputNeurons;
-    // Resize inputs array: trim or pad with first value in set
+    // Resize inputs and inputNames: trim or pad
     while (inputs.length < numInputNeurons) inputs.push(inputValueSet[0]);
     inputs = inputs.slice(0, numInputNeurons);
+    inputNames = inputNames.slice(0, numInputNeurons);
     initNetwork();
 }
 
@@ -306,7 +308,19 @@ function renderNeurons() {
             neuron.addEventListener('mouseenter', e => showTooltip(e, ll, jj));
             neuron.addEventListener('mousemove',  e => moveTooltip(e));
             neuron.addEventListener('mouseleave', hideTooltip);
-            layerDiv.appendChild(neuron);
+
+            if (l === 0 && inputNames.length > 0) {
+                const row = document.createElement('div');
+                row.className = 'neuron-row';
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'neuron-name';
+                nameSpan.textContent = inputNames[j] || '';
+                row.appendChild(nameSpan);
+                row.appendChild(neuron);
+                layerDiv.appendChild(row);
+            } else {
+                layerDiv.appendChild(neuron);
+            }
         }
         container.appendChild(layerDiv);
     }
@@ -534,6 +548,7 @@ function saveToURL() {
         ? 'custom:' + inputValueSet.join(',')
         : ivsEl.value);
     params.set('inp', inputs.join(','));
+    if (inputNames.some(n => n)) params.set('inames', inputNames.join(','));
 
     const sizes = getAllLayerSizes();
     const allW = [], allB = [];
@@ -612,6 +627,10 @@ function loadFromURL() {
     } else {
         inputs = new Array(numInputNeurons).fill(inputValueSet[0]);
     }
+
+    inputNames = params.has('inames')
+        ? params.get('inames').split(',')
+        : [];
 
     renderLayerSizeControls();
     initNetwork(); // builds zero weights/biases and renders everything
