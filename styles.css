@@ -1,72 +1,160 @@
+/* ── Shared base (matches pauldubois98.github.io/GenerativeAI/) ─────────── */
 body {
     font-family: sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f9f9f9;
+    padding: 1em 2em;
     color: #333;
-    padding: 2em;
 }
+
+h1 {
+    font-weight: bold;
+    margin: 0.2em;
+}
+
+h2 {
+    color: #444;
+    font-weight: bold;
+    margin: 0;
+}
+
+h3 {
+    color: grey;
+    margin: 0;
+}
+
+a {
+    color: grey;
+    cursor: pointer;
+}
+
+a:hover {
+    color: dimgrey;
+}
+
+.space {
+    height: 5em;
+}
+
+/* ── Index page ─────────────────────────────────────────────────────────── */
+.intro {
+    color: #555;
+    margin: 0.4em 0 0.8em;
+}
+
+section {
+    width: 100%;
+    max-width: 680px;
+}
+
+.explainer {
+    margin: 0.6em 0 0;
+    padding-left: 1.3em;
+    line-height: 1.85;
+}
+
+.explainer code {
+    font-size: 0.95em;
+    color: #555;
+}
+
+.how-to {
+    margin: 0.6em 0 0;
+    padding-left: 1.3em;
+    line-height: 1.85;
+}
+
+.section-desc {
+    color: #555;
+    margin: 0.4em 0 0.8em;
+}
+
+.truth-tables {
+    display: flex;
+    justify-content: center;
+    gap: 2.5em;
+    margin: 0.6em 0;
+    flex-wrap: wrap;
+}
+
+.table-label {
+    margin: 0 0 0.3em;
+    color: #444;
+    font-weight: bold;
+}
+
+.truth-table {
+    border-collapse: collapse;
+    font-family: monospace;
+    font-size: 0.88em;
+    margin: 0.4em auto;
+}
+
+.try-link {
+    text-align: center;
+}
+
+.truth-table th,
+.truth-table td {
+    border: 1px solid #ccc;
+    padding: 0.25em 0.65em;
+    text-align: center;
+}
+
+.truth-table th {
+    color: #444;
+}
+
+.out-0 { color: #aaa; }
+.out-1 { color: #2E7D32; font-weight: bold; }
+
+.hint {
+    color: grey;
+    font-style: italic;
+    margin: 0.4em 0;
+    font-size: 0.9em;
+}
+
+/* ── Tool page: controls ────────────────────────────────────────────────── */
 .control-group {
-    margin-bottom: 2em;
+    margin-bottom: 1.2em;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.6em;
+    gap: 0.5em;
 }
+
 #layer_size_controls {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.6em;
+    gap: 0.5em;
 }
+
 .layer-size-control {
     display: flex;
     align-items: center;
     gap: 0.4em;
 }
+
 .layer-size-control input {
     width: 3.5em;
 }
-#neuron_tooltip {
-    position: fixed;
-    display: none;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 0.5em 0.7em;
-    font-size: 0.82em;
-    font-family: monospace;
-    pointer-events: none;
-    z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    white-space: nowrap;
-}
-.activation-plot {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: white;
-}
-.network-layers {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    width: 100%;
-    gap: 1em;
-}
+
+/* ── Tool page: network canvas ──────────────────────────────────────────── */
 .network-container {
     display: flex;
     justify-content: space-around;
     align-items: center;
     width: 100%;
     max-width: 600px;
-    background: white;
     border: 1px solid #ccc;
     padding: 2em;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     position: relative;
 }
+
 #network_svg {
     position: absolute;
     top: 0; left: 0;
@@ -74,12 +162,22 @@ body {
     pointer-events: none;
     overflow: visible;
 }
+
+.network-layers {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    gap: 1em;
+}
+
 .layer {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1.5em;
 }
+
 .neuron {
     width: 40px;
     height: 40px;
@@ -99,9 +197,12 @@ body {
     cursor: pointer;
     user-select: none;
 }
+
 .neuron.clickable:hover {
     transform: scale(1.05);
 }
+
+/* ── Tool page: sliders ─────────────────────────────────────────────────── */
 .sliders-container {
     margin-top: 2em;
     width: 100%;
@@ -110,32 +211,55 @@ body {
     flex-direction: column;
     gap: 1em;
 }
+
 .slider-wrapper {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1em;
 }
+
 input[type="range"] {
     flex-grow: 1;
     max-width: 250px;
 }
+
 label {
     font-size: 0.9em;
     font-family: monospace;
 }
-h3 {
-    margin: 1em 0 0.5em 0;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 0.2em;
+
+/* ── Tool page: tooltip ─────────────────────────────────────────────────── */
+#neuron_tooltip {
+    position: fixed;
+    display: none;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 0.5em 0.7em;
+    font-size: 0.82em;
+    font-family: monospace;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    white-space: nowrap;
 }
+
+.activation-plot {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* ── Tool page: save button ─────────────────────────────────────────────── */
 #save_btn {
-    padding: 0.4em 1.2em;
-    font-size: 0.95em;
+    padding: 0.3em 1em;
+    font-size: 0.9em;
     cursor: pointer;
-    border: 1px solid #aaa;
-    border-radius: 5px;
-    background: #f0f0f0;
-    transition: background 0.15s;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: none;
+    color: grey;
+    transition: color 0.15s;
 }
-#save_btn:hover { background: #e0e0e0; }
+
+#save_btn:hover { color: dimgrey; border-color: dimgrey; }
