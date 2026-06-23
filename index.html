@@ -245,6 +245,48 @@
     </div>
     <p class="try-link"><a href="TrainNeuralNetwork.html?ni=3&no=2&nh=1&hs=3&act=step&ivs=binary&inp=0,0,0&w=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0&b=0,0,0,0,0">Try it</a></p>
     <p class="hint">Sum = 3-bit parity (challenge 6); Cout = majority vote (challenge 5).</p>
+
+    <div class="space"></div>
+
+    <h3>Challenge 9: Weighted average <em style="font-weight:normal;color:grey">(linear activation)</em></h3>
+    <p>With a linear activation function the neuron computes a pure weighted sum. Make the output equal the average of the two inputs.</p>
+    <div class="truth-tables">
+        <div>
+            <p class="table-label">AVERAGE</p>
+            <table class="truth-table">
+                <thead><tr><th>A</th><th>B</th><th>Out</th></tr></thead>
+                <tbody>
+                    <tr><td>0</td><td>0</td><td>0</td></tr>
+                    <tr><td>0</td><td>1</td><td>0.5</td></tr>
+                    <tr><td>1</td><td>0</td><td>0.5</td></tr>
+                    <tr><td>1</td><td>1</td><td>1</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="try-link"><a href="TrainNeuralNetwork.html?ni=2&no=1&nh=0&act=linear&ivs=binary&inp=0,0&w=0,0&b=0">Try it</a></p>
+    <p class="hint">No hidden layer needed.</p>
+    <p class="hint">You can try to extend this weighted sum to 5 inputs.</p>
+
+    <div class="space"></div>
+
+    <h3>Challenge 10: Absolute value <em style="font-weight:normal;color:grey">(ReLU)</em></h3>
+    <p>Given an input in {−1, 0, 1}, output its absolute value. A single neuron cannot do this. Use ReLU activation.</p>
+    <div class="truth-tables">
+        <div>
+            <p class="table-label">ABS</p>
+            <table class="truth-table">
+                <thead><tr><th>x</th><th>Out</th></tr></thead>
+                <tbody>
+                    <tr><td>−1</td><td>1</td></tr>
+                    <tr><td>0</td><td>0</td></tr>
+                    <tr><td>1</td><td>1</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="try-link"><a href="TrainNeuralNetwork.html?ni=1&no=1&nh=1&hs=2&act=relu&ivs=ternary&inp=0&w=0,0,0,0&b=0,0,0">Try it</a></p>
+    <p class="hint">Two hidden ReLU neurons, each "catching" one side of the V. The output neuron adds them together.</p>
 </section>
 
 <div class="space"></div>
