@@ -520,7 +520,157 @@ function hideTooltip() {
     document.getElementById('neuron_tooltip').style.display = 'none';
 }
 
+function saveToURL() {
+    const params = new URLSearchParams();
+    params.set('ni', numInputNeurons);
+    params.set('no', numOutputNeurons);
+    params.set('nh', numHiddenLayers);
+    if (numHiddenLayers > 0) params.set('hs', hiddenLayerSizes.join(','));
+    params.set('act', globalActivation);
+    if (globalActivation === 'per_layer') params.set('la', layerActivations.join(','));
+
+    const ivsEl = document.getElementById('input_value_set');
+    params.set('ivs', ivsEl.value === 'custom'
+        ? 'custom:' + inputValueSet.join(',')
+        : ivsEl.value);
+    params.set('inp', inputs.join(','));
+
+    const sizes = getAllLayerSizes();
+    const allW = [], allB = [];
+    for (let l = 0; l < sizes.length - 1; l++) {
+        for (let i = 0; i < sizes[l]; i++)
+            for (let j = 0; j < sizes[l + 1]; j++)
+                allW.push(parseFloat(weights[l][i][j].toFixed(1)));
+        for (let j = 0; j < sizes[l + 1]; j++)
+            allB.push(parseFloat(biases[l][j].toFixed(1)));
+    }
+    params.set('w', allW.join(','));
+    params.set('b', allB.join(','));
+
+    history.replaceState(null, '', '?' + params.toString());
+
+    const btn = document.getElementById('save_btn');
+    const orig = btn.textContent;
+    btn.textContent = 'Saved!';
+    setTimeout(() => { btn.textContent = orig; }, 1200);
+}
+
+function loadFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.toString()) return false;
+
+    if (params.has('ni')) {
+        numInputNeurons = Math.max(1, Math.min(10, parseInt(params.get('ni')) || 2));
+        document.getElementById('num_input_neurons').value = numInputNeurons;
+    }
+    if (params.has('no')) {
+        numOutputNeurons = Math.max(1, Math.min(10, parseInt(params.get('no')) || 1));
+        document.getElementById('num_output_neurons').value = numOutputNeurons;
+    }
+    if (params.has('nh')) {
+        numHiddenLayers = Math.max(0, Math.min(3, parseInt(params.get('nh')) || 0));
+        document.getElementById('num_hidden_layers').value = numHiddenLayers;
+    }
+    if (params.has('hs')) {
+        const raw = params.get('hs').split(',').map(Number);
+        hiddenLayerSizes = Array.from({length: numHiddenLayers}, (_, i) =>
+            Math.max(1, Math.min(10, raw[i] || 3)));
+    } else {
+        hiddenLayerSizes = Array.from({length: numHiddenLayers}, () => 3);
+    }
+
+    if (params.has('act')) {
+        globalActivation = params.get('act');
+        document.getElementById('global_activation').value = globalActivation;
+    }
+
+    if (params.has('ivs')) {
+        const ivs = params.get('ivs');
+        if (ivs === 'binary') {
+            inputValueSet = [0, 1];
+            document.getElementById('input_value_set').value = 'binary';
+            document.getElementById('custom_input_controls').style.display = 'none';
+        } else if (ivs === 'ternary') {
+            inputValueSet = [-1, 0, 1];
+            document.getElementById('input_value_set').value = 'ternary';
+            document.getElementById('custom_input_controls').style.display = 'none';
+        } else if (ivs.startsWith('custom:')) {
+            const vals = ivs.slice(7).split(',').map(Number).filter(n => !isNaN(n));
+            if (vals.length >= 1) {
+                inputValueSet = vals;
+                document.getElementById('input_value_set').value = 'custom';
+                document.getElementById('custom_input_values').value = vals.join(',');
+                document.getElementById('custom_input_controls').style.display = '';
+            }
+        }
+    }
+
+    if (params.has('inp')) {
+        const vals = params.get('inp').split(',').map(Number);
+        inputs = Array.from({length: numInputNeurons}, (_, i) =>
+            isNaN(vals[i]) ? inputValueSet[0] : vals[i]);
+    } else {
+        inputs = new Array(numInputNeurons).fill(inputValueSet[0]);
+    }
+
+    renderLayerSizeControls();
+    initNetwork(); // builds zero weights/biases and renders everything
+
+    // Overwrite weights/biases from URL, then sync slider UI
+    const sizes = getAllLayerSizes();
+    if (params.has('w')) {
+        const allW = params.get('w').split(',').map(Number);
+        let idx = 0;
+        for (let l = 0; l < sizes.length - 1; l++)
+            for (let i = 0; i < sizes[l]; i++)
+                for (let j = 0; j < sizes[l + 1]; j++)
+                    if (idx < allW.length) weights[l][i][j] = allW[idx++];
+    }
+    if (params.has('b')) {
+        const allB = params.get('b').split(',').map(Number);
+        let idx = 0;
+        for (let l = 0; l < sizes.length - 1; l++)
+            for (let j = 0; j < sizes[l + 1]; j++)
+                if (idx < allB.length) biases[l][j] = allB[idx++];
+    }
+    for (let l = 0; l < sizes.length - 1; l++) {
+        for (let i = 0; i < sizes[l]; i++) {
+            for (let j = 0; j < sizes[l + 1]; j++) {
+                const el = document.getElementById(`w_${l}_${i}_${j}`);
+                if (el) { el.value = weights[l][i][j]; el.nextElementSibling.textContent = weights[l][i][j].toFixed(1); }
+            }
+        }
+        for (let j = 0; j < sizes[l + 1]; j++) {
+            const el = document.getElementById(`b_${l}_${j}`);
+            if (el) { el.value = biases[l][j]; el.nextElementSibling.textContent = biases[l][j].toFixed(1); }
+        }
+    }
+
+    // Restore per-layer activations (initNetwork may have reset them)
+    if (params.has('la') && globalActivation === 'per_layer') {
+        const la = params.get('la').split(',');
+        layerActivations = Array.from({length: sizes.length - 1}, (_, l) => la[l] || 'step');
+        renderLayerActivationControls();
+    }
+
+    // Show/hide global plot vs per-layer controls
+    const layerControls = document.getElementById('layer_activation_controls');
+    const globalPlot = document.getElementById('global_activation_plot');
+    if (globalActivation === 'per_layer') {
+        layerControls.style.display = '';
+        globalPlot.style.display = 'none';
+    } else {
+        layerControls.style.display = 'none';
+        globalPlot.style.display = '';
+    }
+
+    updateNetwork();
+    return true;
+}
+
 // Boot
-renderLayerSizeControls();
-initNetwork();
+if (!loadFromURL()) {
+    renderLayerSizeControls();
+    initNetwork();
+}
 drawActivationPlot(document.getElementById('global_activation_plot'), globalActivation);

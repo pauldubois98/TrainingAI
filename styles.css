@@ -129,3 +129,13 @@ h3 {
     border-bottom: 1px solid #ccc;
     padding-bottom: 0.2em;
 }
+#save_btn {
+    padding: 0.4em 1.2em;
+    font-size: 0.95em;
+    cursor: pointer;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    background: #f0f0f0;
+    transition: background 0.15s;
+}
+#save_btn:hover { background: #e0e0e0; }
