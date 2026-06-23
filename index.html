@@ -37,8 +37,8 @@
     <h2>Challenges</h2>
     <p class="section-desc">Adjust the sliders until the output matches the truth table for every input combination.</p>
 
-    <h3>Challenge 1: OR and AND gates</h3>
-    <p>The OR gate outputs 1 when at least one input is 1. The AND gate outputs 1 only when both inputs are 1.</p>
+    <h3>Challenge 1: OR, AND, and NAND gates</h3>
+    <p>Logic gates are the building blocks of every computer. Try to reproduce with a single neuron and no hidden layer.</p>
     <div class="truth-tables">
         <div>
             <p class="table-label">OR</p>
@@ -64,9 +64,22 @@
                 </tbody>
             </table>
         </div>
+        <div>
+            <p class="table-label">NAND</p>
+            <table class="truth-table">
+                <thead><tr><th>A</th><th>B</th><th>Out</th></tr></thead>
+                <tbody>
+                    <tr><td>0</td><td>0</td><td class="out-1">1</td></tr>
+                    <tr><td>0</td><td>1</td><td class="out-1">1</td></tr>
+                    <tr><td>1</td><td>0</td><td class="out-1">1</td></tr>
+                    <tr><td>1</td><td>1</td><td class="out-0">0</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
     <p class="try-link"><a href="TrainNeuralNetwork.html?ni=2&no=1&nh=0&act=step&ivs=binary&inp=0,0&w=0,0&b=0">Try it</a></p>
-    <p class="hint">A single neuron with no hidden layer is enough for both gates.</p>
+    <p class="hint">A single neuron is enough for all three.</p>
+    <p class="hint">Any Boolean function can be built from NAND gates alone.</p>
 
     <div class="space"></div>
 
@@ -114,6 +127,124 @@
     </div>
     <p class="try-link"><a href="TrainNeuralNetwork.html?ni=3&no=1&nh=1&hs=2&act=step&ivs=binary&inp=0,0,0&w=0,0,0,0,0,0,0,0&b=0,0,0">Try it</a></p>
     <p class="hint">Think of it as (D0 AND NOT S) OR (D1 AND S).</p>
+
+    <div class="space"></div>
+
+    <h3>Challenge 4: Majority vote</h3>
+    <p>With three voters, the majority decides: output 1 if at least 2 of the 3 inputs are 1.</p>
+    <div class="truth-tables">
+        <div>
+            <p class="table-label">MAJ</p>
+            <table class="truth-table">
+                <thead><tr><th>A</th><th>B</th><th>C</th><th>Out</th></tr></thead>
+                <tbody>
+                    <tr><td>0</td><td>0</td><td>0</td><td class="out-0">0</td></tr>
+                    <tr><td>0</td><td>0</td><td>1</td><td class="out-0">0</td></tr>
+                    <tr><td>0</td><td>1</td><td>0</td><td class="out-0">0</td></tr>
+                    <tr><td>0</td><td>1</td><td>1</td><td class="out-1">1</td></tr>
+                    <tr><td>1</td><td>0</td><td>0</td><td class="out-0">0</td></tr>
+                    <tr><td>1</td><td>0</td><td>1</td><td class="out-1">1</td></tr>
+                    <tr><td>1</td><td>1</td><td>0</td><td class="out-1">1</td></tr>
+                    <tr><td>1</td><td>1</td><td>1</td><td class="out-1">1</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="try-link"><a href="TrainNeuralNetwork.html?ni=3&no=1&nh=0&act=step&ivs=binary&inp=0,0,0&w=0,0,0&b=0">Try it</a></p>
+    <p class="hint">A single neuron is sufficient. All three inputs play equal roles.</p>
+
+    <div class="space"></div>
+
+    <h3>Challenge 5: 3-bit parity</h3>
+    <p>Output 1 if an odd number of the three inputs are 1. This is XOR extended to three inputs, and shares the same fundamental difficulty.</p>
+    <div class="truth-tables">
+        <div>
+            <p class="table-label">PARITY</p>
+            <table class="truth-table">
+                <thead><tr><th>A</th><th>B</th><th>C</th><th>Out</th></tr></thead>
+                <tbody>
+                    <tr><td>0</td><td>0</td><td>0</td><td class="out-0">0</td></tr>
+                    <tr><td>0</td><td>0</td><td>1</td><td class="out-1">1</td></tr>
+                    <tr><td>0</td><td>1</td><td>0</td><td class="out-1">1</td></tr>
+                    <tr><td>0</td><td>1</td><td>1</td><td class="out-0">0</td></tr>
+                    <tr><td>1</td><td>0</td><td>0</td><td class="out-1">1</td></tr>
+                    <tr><td>1</td><td>0</td><td>1</td><td class="out-0">0</td></tr>
+                    <tr><td>1</td><td>1</td><td>0</td><td class="out-0">0</td></tr>
+                    <tr><td>1</td><td>1</td><td>1</td><td class="out-1">1</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="try-link"><a href="TrainNeuralNetwork.html?ni=3&no=1&nh=1&hs=3&act=step&ivs=binary&inp=0,0,0&w=0,0,0,0,0,0,0,0,0,0,0,0&b=0,0,0,0">Try it</a></p>
+    <p class="hint">Think about detecting "at least 1", "at least 2", and "all 3" separately, then combine.</p>
+
+    <div class="space"></div>
+
+    <h3>Challenge 6: 2-to-4 decoder</h3>
+    <p>A decoder takes 2 input bits and activates exactly one of 4 output neurons: one per possible input combination.</p>
+    <div class="truth-tables">
+        <div>
+            <p class="table-label">DECODER</p>
+            <table class="truth-table">
+                <thead><tr><th>A</th><th>B</th><th>O0</th><th>O1</th><th>O2</th><th>O3</th></tr></thead>
+                <tbody>
+                    <tr><td>0</td><td>0</td><td class="out-1">1</td><td class="out-0">0</td><td class="out-0">0</td><td class="out-0">0</td></tr>
+                    <tr><td>0</td><td>1</td><td class="out-0">0</td><td class="out-1">1</td><td class="out-0">0</td><td class="out-0">0</td></tr>
+                    <tr><td>1</td><td>0</td><td class="out-0">0</td><td class="out-0">0</td><td class="out-1">1</td><td class="out-0">0</td></tr>
+                    <tr><td>1</td><td>1</td><td class="out-0">0</td><td class="out-0">0</td><td class="out-0">0</td><td class="out-1">1</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="try-link"><a href="TrainNeuralNetwork.html?ni=2&no=4&nh=0&act=step&ivs=binary&inp=0,0&w=0,0,0,0,0,0,0,0&b=0,0,0,0">Try it</a></p>
+    <p class="hint">This is one-hot encoding.</p>
+    <p class="hint">Each output neuron independently detects one combination of A and B.</p>
+
+    <div class="space"></div>
+
+    <h3>Challenge 7: Half adder</h3>
+    <p>A half adder adds two bits and produces two outputs: the Sum bit and the Carry bit. This is how computers do arithmetic at the hardware level.</p>
+    <div class="truth-tables">
+        <div>
+            <p class="table-label">HALF ADDER</p>
+            <table class="truth-table">
+                <thead><tr><th>A</th><th>B</th><th>Sum</th><th>Carry</th></tr></thead>
+                <tbody>
+                    <tr><td>0</td><td>0</td><td class="out-0">0</td><td class="out-0">0</td></tr>
+                    <tr><td>0</td><td>1</td><td class="out-1">1</td><td class="out-0">0</td></tr>
+                    <tr><td>1</td><td>0</td><td class="out-1">1</td><td class="out-0">0</td></tr>
+                    <tr><td>1</td><td>1</td><td class="out-0">0</td><td class="out-1">1</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="try-link"><a href="TrainNeuralNetwork.html?ni=2&no=2&nh=1&hs=2&act=step&ivs=binary&inp=0,0&w=0,0,0,0,0,0,0,0&b=0,0,0,0">Try it</a></p>
+    <p class="hint">Sum = XOR(A, B) and Carry = AND(A, B).</p>
+
+    <div class="space"></div>
+
+    <h3>Challenge 8: Full adder</h3>
+    <p>A full adder adds three bits (A, B, and a carry-in from a previous stage) and produces a Sum and a Carry-out. Chaining full adders builds an n-bit adder, which is the core of every CPU.</p>
+    <div class="truth-tables">
+        <div>
+            <p class="table-label">FULL ADDER</p>
+            <table class="truth-table">
+                <thead><tr><th>A</th><th>B</th><th>Cin</th><th>Sum</th><th>Cout</th></tr></thead>
+                <tbody>
+                    <tr><td>0</td><td>0</td><td>0</td><td class="out-0">0</td><td class="out-0">0</td></tr>
+                    <tr><td>0</td><td>0</td><td>1</td><td class="out-1">1</td><td class="out-0">0</td></tr>
+                    <tr><td>0</td><td>1</td><td>0</td><td class="out-1">1</td><td class="out-0">0</td></tr>
+                    <tr><td>0</td><td>1</td><td>1</td><td class="out-0">0</td><td class="out-1">1</td></tr>
+                    <tr><td>1</td><td>0</td><td>0</td><td class="out-1">1</td><td class="out-0">0</td></tr>
+                    <tr><td>1</td><td>0</td><td>1</td><td class="out-0">0</td><td class="out-1">1</td></tr>
+                    <tr><td>1</td><td>1</td><td>0</td><td class="out-0">0</td><td class="out-1">1</td></tr>
+                    <tr><td>1</td><td>1</td><td>1</td><td class="out-1">1</td><td class="out-1">1</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="try-link"><a href="TrainNeuralNetwork.html?ni=3&no=2&nh=1&hs=3&act=step&ivs=binary&inp=0,0,0&w=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0&b=0,0,0,0,0">Try it</a></p>
+    <p class="hint">Sum = 3-bit parity (challenge 6); Cout = majority vote (challenge 5).</p>
 </section>
 
 <div class="space"></div>
